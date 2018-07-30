@@ -1,0 +1,90 @@
+<html>
+	<head>
+		<script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/jquery.validate.js"></script>
+		<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+		<script type="text/javascript">
+				function req() {
+						//$('#text1').value
+						$.ajax({url: "https://fcc-weather-api.glitch.me/api/current?lat=9.937542&lon=-84.061180", success: function(result) {
+								$('#temp').text('La temperatura es ' + String(result.main.temp) + '°C');
+						}});
+						setTimeout(req, 10000);
+				}
+				$(document).ready(function(){
+						req();
+						$('#radio1').change(function() {
+								$('#div2').show();
+								$('#div3').hide();
+						})
+						$('#radio2').change(function() {
+								$('#div2').hide();
+								$('#div3').show();
+						})
+						$('#btn3').click(function(){
+								var json = {"text1": $('#text1').val(), "text2": $('#text2').val(), "text3": $('#text3').val(), "text4": $('#text4').val()};
+								$.post({url: "/post_ws", dataType: 'json', contentType: "application/json", data: JSON.stringify(json), success: function(result) {
+										alert('El resultado es: \nTexto 1: ' + result.text1 + '\nTexto 2: ' + result.text2 + '\nTexto 3: ' + result.text3 + '\nTexto 4: ' + result.text4);
+								}});
+						})
+
+						google.charts.load('current', {'packages':['corechart']});
+						google.charts.setOnLoadCallback(drawChart);
+						function drawChart() {
+								$.ajax({url: "https://iot-xyz.herokuapp.com/iot", success: function(result) {
+										graph = [['Tiempo (s)', 'Valor']]
+										sensor1_data = [];
+										sensor1_time = [];
+										//console.log(result);
+										for (var i = 0; i < result.length; i++) {
+												if (result[i].Sensor === "Presion_1") {
+														//sensor1_data.push(json.Valor);
+														var date = new Date(result[i].date);
+														//sensor1_time.push(date.value);
+														graph.push([date.value, parseFloat(result[i].Valor)])
+														//sensor1_time.push(json.hour * 3600 + json.minute * 60); // convertir a segundos
+												}
+										}
+										console.log(graph);
+										// build graph
+										var data = google.visualization.arrayToDataTable(graph);
+
+										var options = {
+												title: 'Valor del sensor 1 en el tiempo',
+												curveType: 'function',
+												legend: { position: 'bottom' }
+										};
+
+										var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+
+										chart.draw(data, options);
+								}});
+						}
+				});
+		</script>
+	</head>
+	<body>
+			<div id="div1">
+					<label id="temp"></label><hr/>
+					<input name="radio" type="radio" id="radio1" value="radio1" checked />
+					<label for="radio1">Div 1</label>
+					<input name="radio" type="radio" id="radio2" value="radio2" />
+					<label for="radio2">Div 2</label>
+
+					<div id="div2">
+							Texto: <input type="text" minlength="1" name="text" id="div2text" onchange="is_valid" /><br/>
+							Email: <input minlength="1" type="email" name="email" id="email" onchange="is_valid" /><br/>
+							Otro texto: <textarea id="textarea"></textarea/><hr/>
+							<input type="button" name="btn2" id="btn2" value="Enviar" />
+					</div>
+					<div id="div3" hidden>
+							Texto 1: <input type="text" name="text" id="text1" /><br/>
+							Texto 2: <input type="text" name="text" id="text2" /><br/>
+							Texto 3: <input type="text" name="text" id="text3" /><br/>
+							Texto 4: <input type="text" name="text" id="text4" /><hr/>
+							<input type="button" name="btn3" id="btn3" value="Enviar" />
+					</div>
+			</div>
+			<div id="curve_chart" style="width: 900px; height: 500px"></div>
+	</body>
+</html>
